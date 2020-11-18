@@ -8,7 +8,7 @@ Please feel free to browse through my solutions. Be warned that there may be spo
 
 These instructions are probably over-complicated. `docker create` instead of `docker run -it` followed by `exit` should be possible.
 
-```
+```shell
 $ docker build -t advent-of-code-2020-rust .
 
 $ docker run -it --name advent-of-code-2020 --mount type=bind,src=$HOME/Projects/advent-of-code/2020,dst=/advent-of-code/2020 advent-of-code-2020-rust
@@ -23,4 +23,5 @@ $ docker exec -it advent-of-code-2020 zsh
 1. Click on the whale icon in the sidebar.
 2. Right-click on the running container and choose "Attach Visual Studio Code". A new VS Code window will open.
 3. Click "Open Folder". Navigate to `/advent-of-code/2020` then click "OK".
-4. When done, click on "Container advent-of-code-2020" in the bottom-left corner of the window, then choose "Close Remote Connection".
+4. Install the `rust-lang.rust` extension in the container.
+5. When done, click on "Container advent-of-code-2020" in the bottom-left corner of the window, then choose "Close Remote Connection".
