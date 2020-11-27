@@ -3,21 +3,20 @@ use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::iter::FromIterator;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
-pub fn run() {
+pub fn run() -> Option<(Duration, Duration, Duration)> {
   if let Ok(lines) = load_data("data/day01-input.txt") {
     let start_part_1 = Instant::now();
     assert_eq!(3303995, part_1(&lines));
-    let time_part_1 = start_part_1.elapsed().as_micros();
+    let time_part_1 = start_part_1.elapsed();
     let start_part_2 = Instant::now();
     assert_eq!(4953118, part_2(&lines));
-    let time_part_2 = start_part_2.elapsed().as_micros();
-    let time_total = start_part_1.elapsed().as_micros();
-    println!(
-      "Time: part 1 = {} ms, part 2 = {} ms, total = {} ms",
-      time_part_1, time_part_2, time_total
-    );
+    let time_part_2 = start_part_2.elapsed();
+    let time_total = start_part_1.elapsed();
+    Some((time_part_1, time_part_2, time_total))
+  } else {
+    None
   }
 }
 
