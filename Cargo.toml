@@ -4,5 +4,9 @@ version = "0.1.0"
 authors = ["Craig S. Cottingham <craig@cottingham.net>"]
 edition = "2018"
 
+[lib]
+name = "common"
+path = "src/common.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
