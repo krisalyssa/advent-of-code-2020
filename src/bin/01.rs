@@ -1,22 +1,21 @@
-use std::fs::File;
-use std::io;
-use std::io::prelude::*;
-use std::io::BufReader;
-use std::iter::FromIterator;
-use std::time::{Duration, Instant};
+use common::{Day, Part};
 
-pub fn run() -> Option<(Duration, Duration, Duration)> {
-  if let Ok(lines) = load_data("data/day01-input.txt") {
-    let start_part_1 = Instant::now();
-    assert_eq!(3303995, part_1(&lines));
-    let time_part_1 = start_part_1.elapsed();
-    let start_part_2 = Instant::now();
-    assert_eq!(4953118, part_2(&lines));
-    let time_part_2 = start_part_2.elapsed();
-    let time_total = start_part_1.elapsed();
-    Some((time_part_1, time_part_2, time_total))
+pub fn main() {
+  if let Ok(data) = common::load_data("data/day01-input.txt") {
+    let part_1 = Part::new(part_1);
+    let part_2 = Part::new(part_2);
+
+    let mut day = Day::new(part_1, part_2);
+
+    day.run(&data);
+
+    assert_eq!(3303995, day.part_1.result);
+    assert_eq!(4953118, day.part_2.result);
+
+    println!("{}", day.to_string());
   } else {
-    None
+    eprintln!("cannot open data/day01-input.txt");
+    std::process::exit(1);
   }
 }
 
@@ -44,17 +43,6 @@ fn fuel_for_mass(mass: u32) -> u32 {
   } else {
     0
   }
-}
-
-fn load_data(filename: &str) -> io::Result<Vec<String>> {
-  let f = File::open(filename)?;
-  let reader = BufReader::new(f);
-  let iter = reader.lines().map(|value| match value {
-    Ok(v) => v,
-    _ => "".to_string(),
-  });
-  let v = Vec::from_iter(iter);
-  Ok(v)
 }
 
 fn total_fuel_for_mass(mass: u32) -> u32 {
