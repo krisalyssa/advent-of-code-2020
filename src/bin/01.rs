@@ -19,8 +19,8 @@ pub fn main() {
   }
 }
 
-pub fn part_1(lines: &Vec<String>) -> u32 {
-  let answer: u32 = lines
+pub fn part_1(data: &Vec<String>) -> u32 {
+  let answer: u32 = data
     .iter()
     .filter_map(|value| value.parse::<u32>().ok())
     .map(|value| fuel_for_mass(value))
@@ -28,8 +28,8 @@ pub fn part_1(lines: &Vec<String>) -> u32 {
   answer
 }
 
-pub fn part_2(lines: &Vec<String>) -> u32 {
-  let answer: u32 = lines
+pub fn part_2(data: &Vec<String>) -> u32 {
+  let answer: u32 = data
     .iter()
     .filter_map(|value| value.parse::<u32>().ok())
     .map(|value| total_fuel_for_mass(value))
