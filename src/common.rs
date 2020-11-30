@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
@@ -127,13 +128,85 @@ impl Day {
   }
 }
 
+pub fn load_csv(filename: &str) -> io::Result<Vec<String>> {
+  let f = File::open(filename)?;
+  load_csv_from_reader(f)
+}
+
+pub fn load_csv_from_reader<R: Read>(raw_reader: R) -> io::Result<Vec<String>> {
+  let reader = BufReader::new(raw_reader);
+  let v: Vec<String> = reader
+    .lines()
+    .map(|value| match value {
+      Ok(v) => v,
+      _ => "".to_string(),
+    })
+    .map(|line| {
+      let re = Regex::new(r"\s*,\s*").unwrap();
+      let fields: Vec<String> = re.split(&line).map(|field| String::from(field)).collect();
+      fields
+    })
+    .flatten()
+    .collect();
+
+  Ok(v)
+}
+
 pub fn load_data(filename: &str) -> io::Result<Vec<String>> {
   let f = File::open(filename)?;
-  let reader = BufReader::new(f);
+  load_data_from_reader(f)
+}
+
+fn load_data_from_reader<R: Read>(raw_reader: R) -> io::Result<Vec<String>> {
+  let reader = BufReader::new(raw_reader);
   let iter = reader.lines().map(|value| match value {
     Ok(v) => v,
     _ => "".to_string(),
   });
   let v = Vec::from_iter(iter);
   Ok(v)
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_load_csv_from_reader() {
+    let data = "\
+one,two,three
+";
+    match load_csv_from_reader(data.as_bytes()) {
+      Ok(v) => assert_eq!(v, vec!["one", "two", "three"]),
+      Err(err) => panic!("returned error: {}", err),
+    }
+  }
+
+  #[test]
+  fn test_load_multiline_csv_from_reader() {
+    let data = "\
+one,two,three
+four,five,six
+";
+    match load_csv_from_reader(data.as_bytes()) {
+      Ok(v) => assert_eq!(v, vec!["one", "two", "three", "four", "five", "six"]),
+      Err(err) => panic!("returned error: {}", err),
+    }
+  }
+
+  #[test]
+  fn test_load_data_from_reader() {
+    let data = String::from("one\ntwo\nthree");
+    match load_data_from_reader(data.as_bytes()) {
+      Ok(v) => assert_eq!(v, vec!["one", "two", "three"]),
+      _ => panic!("returned error"),
+    }
+  }
+
+  // #[test]
+  // fn test_total_fuel_for_mass() {
+  //   assert_eq!(total_fuel_for_mass(14), 2);
+  //   assert_eq!(total_fuel_for_mass(1969), 966);
+  //   assert_eq!(total_fuel_for_mass(100756), 50346);
+  // }
 }
