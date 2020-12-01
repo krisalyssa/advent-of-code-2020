@@ -1,7 +1,8 @@
 use common::{Day, Part};
+use std::collections::{BinaryHeap, VecDeque};
 
 pub fn main() {
-  if let Ok(data) = common::load_data("data/day01-input.txt") {
+  if let Ok(data) = common::load_data("data/day-01-input.txt") {
     let part_1 = Part::new(part_1);
     let part_2 = Part::new(part_2);
 
@@ -9,49 +10,70 @@ pub fn main() {
 
     day.run(&data);
 
-    assert_eq!(3303995, day.part_1.result);
-    assert_eq!(4953118, day.part_2.result);
+    assert_eq!(719796, day.part_1.result);
+    // assert_eq!(4953118, day.part_2.result);
 
     println!("{}", day.to_string());
   } else {
-    eprintln!("cannot open data/day01-input.txt");
+    eprintln!("cannot open data/day-01-input.txt");
     std::process::exit(1);
   }
 }
 
 pub fn part_1(data: &Vec<String>) -> u32 {
-  let answer: u32 = data
+  let parsed_data: Vec<u32> = data
     .iter()
     .filter_map(|value| value.parse::<u32>().ok())
-    .map(|value| fuel_for_mass(value))
-    .sum();
+    .collect();
+
+  let sorted_data = sort_data(parsed_data);
+  let mut deque: VecDeque<u32> = VecDeque::with_capacity(sorted_data.len());
+  for item in sorted_data {
+    deque.push_back(item);
+  }
+
+  let mut entry_1: Option<u32> = None;
+  let mut entry_2: Option<u32> = None;
+
+  while deque.len() > 1 {
+    let left = *deque.front().unwrap();
+    while left + *deque.back().unwrap() > 2020 {
+      // println!("popping {} from deque", *deque.back().unwrap());
+      deque.pop_back();
+    }
+    let mut right_iter = deque.iter();
+    right_iter.next();
+
+    for right in right_iter {
+      let sum = left + right;
+      // println!("{} + {} = {}", left, right, sum);
+      if sum == 2020 {
+        entry_2 = Some(*right);
+        break;
+      }
+    }
+
+    if entry_2 != None {
+      entry_1 = Some(left);
+      break;
+    }
+
+    deque.pop_front();
+  }
+
+  // 462 * 1558 = 719_796
+  entry_1.unwrap_or(0) * entry_2.unwrap_or(0)
+}
+
+pub fn part_2(_data: &Vec<String>) -> u32 {
+  let answer: u32 = 0;
   answer
 }
 
-pub fn part_2(data: &Vec<String>) -> u32 {
-  let answer: u32 = data
-    .iter()
-    .filter_map(|value| value.parse::<u32>().ok())
-    .map(|value| total_fuel_for_mass(value))
-    .sum();
-  answer
-}
-
-fn fuel_for_mass(mass: u32) -> u32 {
-  if mass / 3 >= 2 {
-    (mass / 3) - 2
-  } else {
-    0
-  }
-}
-
-fn total_fuel_for_mass(mass: u32) -> u32 {
-  let additional_fuel = fuel_for_mass(mass);
-  if additional_fuel > 0 {
-    additional_fuel + total_fuel_for_mass(additional_fuel)
-  } else {
-    0
-  }
+fn sort_data(data: Vec<u32>) -> Vec<u32> {
+  let mut copied_data = Vec::new();
+  copied_data.extend_from_slice(data.as_slice());
+  BinaryHeap::from(copied_data).into_sorted_vec()
 }
 
 #[cfg(test)]
@@ -59,17 +81,25 @@ mod tests {
   use super::*;
 
   #[test]
-  fn test_fuel_for_mass() {
-    assert_eq!(fuel_for_mass(12), 2);
-    assert_eq!(fuel_for_mass(14), 2);
-    assert_eq!(fuel_for_mass(1969), 654);
-    assert_eq!(fuel_for_mass(100756), 33583);
+  fn test_part_1() {
+    assert_eq!(
+      part_1(&vec![
+        "1721".to_string(),
+        "979".to_string(),
+        "366".to_string(),
+        "299".to_string(),
+        "675".to_string(),
+        "1456".to_string()
+      ]),
+      514_579
+    );
   }
 
   #[test]
-  fn test_total_fuel_for_mass() {
-    assert_eq!(total_fuel_for_mass(14), 2);
-    assert_eq!(total_fuel_for_mass(1969), 966);
-    assert_eq!(total_fuel_for_mass(100756), 50346);
+  fn test_sort_data() {
+    assert_eq!(
+      sort_data(vec![1721, 979, 366, 299, 675, 1456]),
+      vec![299, 366, 675, 979, 1456, 1721]
+    );
   }
 }
