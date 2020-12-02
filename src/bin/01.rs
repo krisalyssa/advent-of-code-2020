@@ -1,4 +1,5 @@
 use common::{Day, Part};
+use itertools::Itertools;
 use std::collections::{BinaryHeap, VecDeque};
 
 pub fn main() {
@@ -10,8 +11,8 @@ pub fn main() {
 
     day.run(&data);
 
-    assert_eq!(719796, day.part_1.result);
-    // assert_eq!(4953118, day.part_2.result);
+    assert_eq!(719_796, day.part_1.result);
+    assert_eq!(144_554_112, day.part_2.result);
 
     println!("{}", day.to_string());
   } else {
@@ -38,7 +39,6 @@ pub fn part_1(data: &Vec<String>) -> u32 {
   while deque.len() > 1 {
     let left = *deque.front().unwrap();
     while left + *deque.back().unwrap() > 2020 {
-      // println!("popping {} from deque", *deque.back().unwrap());
       deque.pop_back();
     }
     let mut right_iter = deque.iter();
@@ -46,7 +46,6 @@ pub fn part_1(data: &Vec<String>) -> u32 {
 
     for right in right_iter {
       let sum = left + right;
-      // println!("{} + {} = {}", left, right, sum);
       if sum == 2020 {
         entry_2 = Some(*right);
         break;
@@ -65,9 +64,27 @@ pub fn part_1(data: &Vec<String>) -> u32 {
   entry_1.unwrap_or(0) * entry_2.unwrap_or(0)
 }
 
-pub fn part_2(_data: &Vec<String>) -> u32 {
-  let answer: u32 = 0;
-  answer
+pub fn part_2(data: &Vec<String>) -> u32 {
+  let parsed_data: Vec<u32> = data
+    .iter()
+    .filter_map(|value| value.parse::<u32>().ok())
+    .collect();
+
+  let mut triple: Vec<u32> = Vec::new();
+
+  for combo in parsed_data.iter().combinations(3) {
+    if combo.iter().map(|item| *item).sum1::<u32>().unwrap() == 2020 {
+      triple = combo
+        .iter()
+        .map(|item| *item)
+        .map(|item| *item)
+        .collect_vec();
+      break;
+    }
+  }
+
+  // 979 * 366 * 675] = 144_554_112
+  triple.iter().product1::<u32>().unwrap()
 }
 
 fn sort_data(data: Vec<u32>) -> Vec<u32> {
@@ -92,6 +109,21 @@ mod tests {
         "1456".to_string()
       ]),
       514_579
+    );
+  }
+
+  #[test]
+  fn test_part_2() {
+    assert_eq!(
+      part_2(&vec![
+        "1721".to_string(),
+        "979".to_string(),
+        "366".to_string(),
+        "299".to_string(),
+        "675".to_string(),
+        "1456".to_string()
+      ]),
+      241_861_950
     );
   }
 
