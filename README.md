@@ -18,7 +18,15 @@ $ docker exec -it advent-of-code-2020 zsh
 #
 ```
 
-## Connecting VS Code to the sandbox
+## Edit/build/run/repeat
+
+```shell
+# cargo build
+# cargo test
+# cargo run
+```
+
+## Optional: Connecting VS Code to the sandbox
 
 1. Click on the whale icon in the sidebar.
 2. Right-click on the running container and choose "Attach Visual Studio Code". A new VS Code window will open.
