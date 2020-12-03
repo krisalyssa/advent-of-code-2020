@@ -21,7 +21,7 @@ pub fn main() {
   }
 }
 
-pub fn part_1(data: &Vec<String>) -> u32 {
+pub fn part_1(data: &Vec<String>) -> u64 {
   let rows_vec = data
     .iter()
     .map(|line| split_row(line.as_str()))
