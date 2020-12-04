@@ -3,7 +3,9 @@ use std::collections::VecDeque;
 use unicode_segmentation::UnicodeSegmentation;
 
 pub fn main() {
-  if let Ok(data) = common::load_data("data/day-03-input.txt") {
+  let mut data: Vec<String> = vec![];
+
+  if let Ok(_) = common::load_data("data/day-03-input.txt", &mut data) {
     let part_1 = Part::new(part_1);
     let part_2 = Part::new(part_2);
 
@@ -21,11 +23,11 @@ pub fn main() {
   }
 }
 
-pub fn part_1(data: &Vec<String>) -> u64 {
+pub fn part_1(data: &Vec<&str>) -> u64 {
   trees_in_path(data, 3, 1) as u64
 }
 
-pub fn part_2(data: &Vec<String>) -> u64 {
+pub fn part_2(data: &Vec<&str>) -> u64 {
   [(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)]
     .iter()
     .map(|(right, down)| trees_in_path(data, *right as usize, *down as usize) as u64)
@@ -40,7 +42,7 @@ fn split_row(row: &str) -> Vec<&str> {
 // the correct number of rows when down > 1, so I hard-coded it for now.
 // I should revisit to allow passing an arbitrary value for down.
 
-fn trees_in_path(data: &Vec<String>, right: usize, down: usize) -> u32 {
+fn trees_in_path(data: &Vec<&str>, right: usize, down: usize) -> u32 {
   match down {
     1 => trees_in_path_down_1(data, right),
     2 => trees_in_path_down_2(data, right),
@@ -48,10 +50,10 @@ fn trees_in_path(data: &Vec<String>, right: usize, down: usize) -> u32 {
   }
 }
 
-fn trees_in_path_down_1(data: &Vec<String>, right: usize) -> u32 {
+fn trees_in_path_down_1(data: &Vec<&str>, right: usize) -> u32 {
   let rows_vec = data
     .iter()
-    .map(|line| split_row(line.as_str()))
+    .map(|line| split_row(line))
     .map(|row| VecDeque::from(row))
     .collect::<Vec<VecDeque<&str>>>();
   let mut rows = VecDeque::from(rows_vec);
@@ -70,10 +72,10 @@ fn trees_in_path_down_1(data: &Vec<String>, right: usize) -> u32 {
   count
 }
 
-fn trees_in_path_down_2(data: &Vec<String>, right: usize) -> u32 {
+fn trees_in_path_down_2(data: &Vec<&str>, right: usize) -> u32 {
   let rows_vec = data
     .iter()
-    .map(|line| split_row(line.as_str()))
+    .map(|line| split_row(line))
     .map(|row| VecDeque::from(row))
     .collect::<Vec<VecDeque<&str>>>();
   let mut rows = VecDeque::from(rows_vec);
@@ -101,17 +103,17 @@ mod tests {
   #[test]
   fn test_part_1() {
     let data = vec![
-      "..##.......".to_string(),
-      "#...#...#..".to_string(),
-      ".#....#..#.".to_string(),
-      "..#.#...#.#".to_string(),
-      ".#...##..#.".to_string(),
-      "..#.##.....".to_string(),
-      ".#.#.#....#".to_string(),
-      ".#........#".to_string(),
-      "#.##...#...".to_string(),
-      "#...##....#".to_string(),
-      ".#..#...#.#".to_string(),
+      "..##.......",
+      "#...#...#..",
+      ".#....#..#.",
+      "..#.#...#.#",
+      ".#...##..#.",
+      "..#.##.....",
+      ".#.#.#....#",
+      ".#........#",
+      "#.##...#...",
+      "#...##....#",
+      ".#..#...#.#",
     ];
 
     assert_eq!(part_1(&data), 7);
@@ -120,17 +122,17 @@ mod tests {
   #[test]
   fn test_part_2() {
     let data = vec![
-      "..##.......".to_string(),
-      "#...#...#..".to_string(),
-      ".#....#..#.".to_string(),
-      "..#.#...#.#".to_string(),
-      ".#...##..#.".to_string(),
-      "..#.##.....".to_string(),
-      ".#.#.#....#".to_string(),
-      ".#........#".to_string(),
-      "#.##...#...".to_string(),
-      "#...##....#".to_string(),
-      ".#..#...#.#".to_string(),
+      "..##.......",
+      "#...#...#..",
+      ".#....#..#.",
+      "..#.#...#.#",
+      ".#...##..#.",
+      "..#.##.....",
+      ".#.#.#....#",
+      ".#........#",
+      "#.##...#...",
+      "#...##....#",
+      ".#..#...#.#",
     ];
 
     assert_eq!(part_2(&data), 336);
@@ -139,17 +141,17 @@ mod tests {
   #[test]
   fn test_trees_in_path() {
     let data = vec![
-      "..##.......".to_string(),
-      "#...#...#..".to_string(),
-      ".#....#..#.".to_string(),
-      "..#.#...#.#".to_string(),
-      ".#...##..#.".to_string(),
-      "..#.##.....".to_string(),
-      ".#.#.#....#".to_string(),
-      ".#........#".to_string(),
-      "#.##...#...".to_string(),
-      "#...##....#".to_string(),
-      ".#..#...#.#".to_string(),
+      "..##.......",
+      "#...#...#..",
+      ".#....#..#.",
+      "..#.#...#.#",
+      ".#...##..#.",
+      "..#.##.....",
+      ".#.#.#....#",
+      ".#........#",
+      "#.##...#...",
+      "#...##....#",
+      ".#..#...#.#",
     ];
 
     assert_eq!(trees_in_path(&data, 1, 1), 2);

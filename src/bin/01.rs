@@ -3,7 +3,9 @@ use itertools::Itertools;
 use std::collections::{BinaryHeap, VecDeque};
 
 pub fn main() {
-  if let Ok(data) = common::load_data("data/day-01-input.txt") {
+  let mut data: Vec<String> = vec![];
+
+  if let Ok(_) = common::load_data("data/day-01-input.txt", &mut data) {
     let part_1 = Part::new(part_1);
     let part_2 = Part::new(part_2);
 
@@ -21,7 +23,7 @@ pub fn main() {
   }
 }
 
-pub fn part_1(data: &Vec<String>) -> u64 {
+pub fn part_1(data: &Vec<&str>) -> u64 {
   let parsed_data: Vec<u32> = data
     .iter()
     .filter_map(|value| value.parse::<u32>().ok())
@@ -64,7 +66,7 @@ pub fn part_1(data: &Vec<String>) -> u64 {
   (entry_1.unwrap_or(0) * entry_2.unwrap_or(0)) as u64
 }
 
-pub fn part_2(data: &Vec<String>) -> u64 {
+pub fn part_2(data: &Vec<&str>) -> u64 {
   let parsed_data: Vec<u32> = data
     .iter()
     .filter_map(|value| value.parse::<u32>().ok())
@@ -100,14 +102,7 @@ mod tests {
   #[test]
   fn test_part_1() {
     assert_eq!(
-      part_1(&vec![
-        "1721".to_string(),
-        "979".to_string(),
-        "366".to_string(),
-        "299".to_string(),
-        "675".to_string(),
-        "1456".to_string()
-      ]),
+      part_1(&vec!["1721", "979", "366", "299", "675", "1456"]),
       514_579
     );
   }
@@ -115,14 +110,7 @@ mod tests {
   #[test]
   fn test_part_2() {
     assert_eq!(
-      part_2(&vec![
-        "1721".to_string(),
-        "979".to_string(),
-        "366".to_string(),
-        "299".to_string(),
-        "675".to_string(),
-        "1456".to_string()
-      ]),
+      part_2(&vec!["1721", "979", "366", "299", "675", "1456"]),
       241_861_950
     );
   }

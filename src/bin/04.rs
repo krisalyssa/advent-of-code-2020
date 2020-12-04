@@ -2,8 +2,13 @@ use common::{Day, Part};
 use regex::Regex;
 use std::collections::HashMap;
 
+#[macro_use]
+extern crate maplit;
+
 pub fn main() {
-  if let Ok(data) = common::load_data("data/day-04-input.txt") {
+  let mut data: Vec<String> = vec![];
+
+  if let Ok(_) = common::load_data("data/day-04-input.txt", &mut data) {
     let part_1 = Part::new(part_1);
     let part_2 = Part::new(part_2);
 
@@ -21,25 +26,29 @@ pub fn main() {
   }
 }
 
-pub fn part_1(data: &Vec<String>) -> u64 {
-  merge_records(data)
+pub fn part_1(data: &Vec<&str>) -> u64 {
+  let mut buffer: Vec<String> = vec![];
+
+  merge_records(&data, &mut buffer)
     .iter()
     .filter(|record| is_complete_record(record))
     .count() as u64
 }
 
-pub fn part_2(data: &Vec<String>) -> u64 {
-  merge_records(data)
+pub fn part_2(data: &Vec<&str>) -> u64 {
+  let mut buffer: Vec<String> = vec![];
+
+  merge_records(&data, &mut buffer)
     .iter()
     .filter(|record| is_complete_record(record))
     .filter(|record| is_valid_record(record))
     .count() as u64
 }
 
-fn is_complete_record(record: &HashMap<String, String>) -> bool {
+fn is_complete_record(record: &HashMap<&str, &str>) -> bool {
   vec!["ecl", "pid", "eyr", "hcl", "byr", "iyr", "hgt"]
     .iter()
-    .all(|key| record.contains_key(&key.to_string()))
+    .all(|key| record.contains_key(key))
 }
 
 fn is_valid_field(field: &str, value: &str) -> bool {
@@ -115,43 +124,48 @@ fn is_valid_pid(value: &str) -> bool {
   regex.is_match(value)
 }
 
-fn is_valid_record(record: &HashMap<String, String>) -> bool {
+fn is_valid_record(record: &HashMap<&str, &str>) -> bool {
   vec!["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"]
     .iter()
-    .all(|key| is_valid_field(*key, record.get(&key.to_string()).unwrap().as_str()))
+    .all(|key| is_valid_field(*key, record.get(key).unwrap()))
 }
 
-fn merge_line_into_record(acc: &mut Vec<String>, line: &String) -> Vec<String> {
+fn merge_line_into_record(acc: &mut Vec<String>, line: &str) {
   if line.is_empty() {
     acc.push("".to_string());
   } else {
     if let Some(buffer) = acc.last_mut() {
-      *buffer = [buffer.as_str(), line.as_str()].join(" ");
+      *buffer = [buffer, line].join(" ");
     }
-  }
-
-  acc.to_vec()
+  };
 }
 
-fn merge_records(data: &Vec<String>) -> Vec<HashMap<String, String>> {
+fn merge_records<'a>(
+  data: &Vec<&str>,
+  buffer: &'a mut Vec<String>,
+) -> Vec<HashMap<&'a str, &'a str>> {
+  if buffer.is_empty() {
+    buffer.push("".to_string())
+  };
+
   data
     .iter()
-    .fold(vec!["".to_string()], |mut acc, line| {
-      merge_line_into_record(&mut acc, line)
-    })
+    .for_each(|line| merge_line_into_record(buffer, line));
+
+  buffer
     .iter()
-    .map(|record| record.trim().to_string())
+    .map(|record| record.trim())
     .map(|record| record_as_hash_map(&record))
     .collect()
 }
 
-fn record_as_hash_map(record: &String) -> HashMap<String, String> {
+fn record_as_hash_map(record: &str) -> HashMap<&str, &str> {
   let favs = (*record)
     .split_whitespace()
     .map(|fv| split_field_and_value(fv));
   let mut h = HashMap::new();
   for (field, value) in favs {
-    h.insert(field.to_string(), value.to_string());
+    h.insert(field, value);
   }
   h
 }
@@ -181,92 +195,74 @@ mod tests {
 
   #[test]
   fn test_is_complete_record() {
-    let record_1: HashMap<String, String> = [
-      ("ecl".to_string(), "gry".to_string()),
-      ("pid".to_string(), "860033327".to_string()),
-      ("eyr".to_string(), "2020".to_string()),
-      ("hcl".to_string(), "#fffffd".to_string()),
-      ("byr".to_string(), "1937".to_string()),
-      ("iyr".to_string(), "2017".to_string()),
-      ("cid".to_string(), "147".to_string()),
-      ("hgt".to_string(), "183cm".to_string()),
-    ]
-    .iter()
-    .cloned()
-    .collect();
+    let record_1: HashMap<&str, &str> = hashmap! {
+      "ecl" => "gry",
+      "pid" => "860033327",
+      "eyr" => "2020",
+      "hcl" => "#fffffd",
+      "byr" => "1937",
+      "iyr" => "2017",
+      "cid" => "147",
+      "hgt" => "183cm",
+    };
     assert!(is_complete_record(&record_1));
 
-    let record_2: HashMap<String, String> = [
-      ("iyr".to_string(), "2013".to_string()),
-      ("ecl".to_string(), "amb".to_string()),
-      ("cid".to_string(), "350".to_string()),
-      ("eyr".to_string(), "2023".to_string()),
-      ("pid".to_string(), "028048884".to_string()),
-      ("hcl".to_string(), "#cfa07d".to_string()),
-      ("byr".to_string(), "1929".to_string()),
-    ]
-    .iter()
-    .cloned()
-    .collect();
+    let record_2: HashMap<&str, &str> = hashmap! {
+      "iyr" => "2013",
+      "ecl" => "amb",
+      "cid" => "350",
+      "eyr" => "2023",
+      "pid" => "028048884",
+      "hcl" => "#cfa07d",
+      "byr" => "1929",
+    };
     assert!(!is_complete_record(&record_2));
 
-    let record_3: HashMap<String, String> = [
-      ("hcl".to_string(), "#ae17e1".to_string()),
-      ("iyr".to_string(), "2013".to_string()),
-      ("eyr".to_string(), "2024".to_string()),
-      ("ecl".to_string(), "brn".to_string()),
-      ("pid".to_string(), "760753108".to_string()),
-      ("byr".to_string(), "1931".to_string()),
-      ("hgt".to_string(), "179cm".to_string()),
-    ]
-    .iter()
-    .cloned()
-    .collect();
+    let record_3: HashMap<&str, &str> = hashmap! {
+      "hcl" => "#ae17e1",
+      "iyr" => "2013",
+      "eyr" => "2024",
+      "ecl" => "brn",
+      "pid" => "760753108",
+      "byr" => "1931",
+      "hgt" => "179cm",
+    };
     assert!(is_complete_record(&record_3));
 
-    let record_4: HashMap<String, String> = [
-      ("hcl".to_string(), "#cfa07d".to_string()),
-      ("eyr".to_string(), "2025".to_string()),
-      ("pid".to_string(), "166559648".to_string()),
-      ("iyr".to_string(), "2011".to_string()),
-      ("ecl".to_string(), "brn".to_string()),
-      ("hgt".to_string(), "59in".to_string()),
-    ]
-    .iter()
-    .cloned()
-    .collect();
+    let record_4: HashMap<&str, &str> = hashmap! {
+      "hcl" => "#cfa07d",
+      "eyr" => "2025",
+      "pid" => "166559648",
+      "iyr" => "2011",
+      "ecl" => "brn",
+      "hgt" => "59in",
+    };
     assert!(!is_complete_record(&record_4));
   }
 
   #[test]
   fn test_is_valid_record() {
-    let invalid_1: HashMap<String, String> = [
-      ("eyr".to_string(), "1972".to_string()),
-      ("cid".to_string(), "100".to_string()),
-      ("hcl".to_string(), "#18171d".to_string()),
-      ("ecl".to_string(), "amb".to_string()),
-      ("hgt".to_string(), "170".to_string()),
-      ("pid".to_string(), "186cm".to_string()),
-      ("iyr".to_string(), "2018".to_string()),
-      ("byr".to_string(), "1926".to_string()),
-    ]
-    .iter()
-    .cloned()
-    .collect();
+    let invalid_1: HashMap<&str, &str> = hashmap! {
+      "eyr" => "1972",
+      "cid" => "100",
+      "hcl" => "#18171d",
+      "ecl" => "amb",
+      "hgt" => "170",
+      "pid" => "186cm",
+      "iyr" => "2018",
+      "byr" => "1926",
+    };
     assert!(!is_valid_record(&invalid_1));
 
-    let valid_1: HashMap<String, String> = [
-      ("pid".to_string(), "087499704".to_string()),
-      ("hgt".to_string(), "74in".to_string()),
-      ("ecl".to_string(), "grn".to_string()),
-      ("iyr".to_string(), "2012".to_string()),
-      ("eyr".to_string(), "2030".to_string()),
-      ("byr".to_string(), "1980".to_string()),
-      ("hcl".to_string(), "#623a2f".to_string()),
-    ]
-    .iter()
-    .cloned()
-    .collect();
+    let valid_1: HashMap<&str, &str> = hashmap! {
+      "pid" => "087499704",
+      "hgt" => "74in",
+      "ecl" => "grn",
+      "iyr" => "2012",
+      "eyr" => "2030",
+      "byr" => "1980",
+      "hcl" => "#623a2f",
+    };
     assert!(is_valid_record(&valid_1));
   }
 
@@ -317,35 +313,34 @@ mod tests {
 
   #[test]
   fn test_merge_records() {
-    let data = vec![
-      "ecl:gry pid:860033327 eyr:2020 hcl:#fffffd".to_string(),
-      "byr:1937 iyr:2017 cid:147 hgt:183cm".to_string(),
-      "".to_string(),
-      "iyr:2013 ecl:amb cid:350 eyr:2023 pid:028048884".to_string(),
-      "hcl:#cfa07d byr:1929".to_string(),
-      "".to_string(),
-      "hcl:#ae17e1 iyr:2013".to_string(),
-      "eyr:2024".to_string(),
-      "ecl:brn pid:760753108 byr:1931".to_string(),
-      "hgt:179cm".to_string(),
-      "".to_string(),
-      "hcl:#cfa07d eyr:2025 pid:166559648".to_string(),
-      "iyr:2011 ecl:brn hgt:59in".to_string(),
+    let data: Vec<&str> = vec![
+      "ecl:gry pid:860033327 eyr:2020 hcl:#fffffd",
+      "byr:1937 iyr:2017 cid:147 hgt:183cm",
+      "",
+      "iyr:2013 ecl:amb cid:350 eyr:2023 pid:028048884",
+      "hcl:#cfa07d byr:1929",
+      "",
+      "hcl:#ae17e1 iyr:2013",
+      "eyr:2024",
+      "ecl:brn pid:760753108 byr:1931",
+      "hgt:179cm",
+      "",
+      "hcl:#cfa07d eyr:2025 pid:166559648",
+      "iyr:2011 ecl:brn hgt:59in",
     ];
-    let actual = merge_records(&data);
-    let expected: HashMap<String, String> = [
-      ("ecl".to_string(), "gry".to_string()),
-      ("pid".to_string(), "860033327".to_string()),
-      ("eyr".to_string(), "2020".to_string()),
-      ("hcl".to_string(), "#fffffd".to_string()),
-      ("byr".to_string(), "1937".to_string()),
-      ("iyr".to_string(), "2017".to_string()),
-      ("cid".to_string(), "147".to_string()),
-      ("hgt".to_string(), "183cm".to_string()),
-    ]
-    .iter()
-    .cloned()
-    .collect();
+    let mut buffer: Vec<String> = vec![];
+
+    let actual = merge_records(&data, &mut buffer);
+    let expected = hashmap! {
+      "ecl" => "gry",
+      "pid" => "860033327",
+      "eyr" => "2020",
+      "hcl" => "#fffffd",
+      "byr" => "1937",
+      "iyr" => "2017",
+      "cid" => "147",
+      "hgt" => "183cm",
+    };
 
     assert_eq!(actual.len(), 4);
     assert_eq!(actual[0], expected);
