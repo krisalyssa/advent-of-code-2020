@@ -21,18 +21,18 @@ pub fn main() {
   }
 }
 
-pub fn part_1(data: &Vec<String>) -> u32 {
+pub fn part_1(data: &Vec<String>) -> u64 {
   data
     .iter()
     .filter(|rule| check_password_against_sled_rule(rule))
-    .count() as u32
+    .count() as u64
 }
 
-pub fn part_2(data: &Vec<String>) -> u32 {
+pub fn part_2(data: &Vec<String>) -> u64 {
   data
     .iter()
     .filter(|rule| check_password_against_toboggan_rule(rule))
-    .count() as u32
+    .count() as u64
 }
 
 fn check_password_against_sled_rule(rule: &str) -> bool {

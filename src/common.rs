@@ -10,11 +10,11 @@ use std::time::{Duration, Instant};
 // related to running days
 //
 
-pub type PartFn = fn(&Vec<String>) -> u32;
+pub type PartFn = fn(&Vec<String>) -> u64;
 
 pub struct Part {
   fun: PartFn,
-  pub result: u32,
+  pub result: u64,
   duration: Duration,
 }
 

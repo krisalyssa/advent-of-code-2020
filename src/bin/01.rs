@@ -21,7 +21,7 @@ pub fn main() {
   }
 }
 
-pub fn part_1(data: &Vec<String>) -> u32 {
+pub fn part_1(data: &Vec<String>) -> u64 {
   let parsed_data: Vec<u32> = data
     .iter()
     .filter_map(|value| value.parse::<u32>().ok())
@@ -61,10 +61,10 @@ pub fn part_1(data: &Vec<String>) -> u32 {
   }
 
   // 462 * 1558 = 719_796
-  entry_1.unwrap_or(0) * entry_2.unwrap_or(0)
+  (entry_1.unwrap_or(0) * entry_2.unwrap_or(0)) as u64
 }
 
-pub fn part_2(data: &Vec<String>) -> u32 {
+pub fn part_2(data: &Vec<String>) -> u64 {
   let parsed_data: Vec<u32> = data
     .iter()
     .filter_map(|value| value.parse::<u32>().ok())
@@ -84,7 +84,7 @@ pub fn part_2(data: &Vec<String>) -> u32 {
   }
 
   // 979 * 366 * 675] = 144_554_112
-  triple.iter().product1::<u32>().unwrap()
+  (triple.iter().product1::<u32>().unwrap()) as u64
 }
 
 fn sort_data(data: Vec<u32>) -> Vec<u32> {
