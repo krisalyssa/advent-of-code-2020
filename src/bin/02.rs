@@ -3,7 +3,9 @@ use regex::Regex;
 use unicode_segmentation::UnicodeSegmentation;
 
 pub fn main() {
-  if let Ok(data) = common::load_data("data/day-02-input.txt") {
+  let mut data: Vec<String> = vec![];
+
+  if let Ok(_) = common::load_data("data/day-02-input.txt", &mut data) {
     let part_1 = Part::new(part_1);
     let part_2 = Part::new(part_2);
 
@@ -21,14 +23,14 @@ pub fn main() {
   }
 }
 
-pub fn part_1(data: &Vec<String>) -> u64 {
+pub fn part_1(data: &Vec<&str>) -> u64 {
   data
     .iter()
     .filter(|rule| check_password_against_sled_rule(rule))
     .count() as u64
 }
 
-pub fn part_2(data: &Vec<String>) -> u64 {
+pub fn part_2(data: &Vec<&str>) -> u64 {
   data
     .iter()
     .filter(|rule| check_password_against_toboggan_rule(rule))
