@@ -137,11 +137,4 @@ four,five,six
       _ => panic!("returned error"),
     }
   }
-
-  // #[test]
-  // fn test_total_fuel_for_mass() {
-  //   assert_eq!(total_fuel_for_mass(14), 2);
-  //   assert_eq!(total_fuel_for_mass(1969), 966);
-  //   assert_eq!(total_fuel_for_mass(100756), 50346);
-  // }
 }
