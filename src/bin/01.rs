@@ -1,6 +1,5 @@
 use common::{Day, Part};
 use itertools::Itertools;
-use std::collections::{BinaryHeap, VecDeque};
 
 pub fn main() {
   let mut data: Vec<String> = vec![];
@@ -29,41 +28,17 @@ pub fn part_1(data: &[&str]) -> u64 {
     .filter_map(|value| value.parse::<u32>().ok())
     .collect();
 
-  let sorted_data = sort_data(parsed_data);
-  let mut deque: VecDeque<u32> = VecDeque::with_capacity(sorted_data.len());
-  for item in sorted_data {
-    deque.push_back(item);
-  }
+  let mut pair: Vec<u32> = Vec::new();
 
-  let mut entry_1: Option<u32> = None;
-  let mut entry_2: Option<u32> = None;
-
-  while deque.len() > 1 {
-    let left = *deque.front().unwrap();
-    while left + *deque.back().unwrap() > 2020 {
-      deque.pop_back();
-    }
-    let mut right_iter = deque.iter();
-    right_iter.next();
-
-    for right in right_iter {
-      let sum = left + right;
-      if sum == 2020 {
-        entry_2 = Some(*right);
-        break;
-      }
-    }
-
-    if entry_2 != None {
-      entry_1 = Some(left);
+  for combo in parsed_data.iter().combinations(2) {
+    if combo.iter().copied().sum1::<u32>().unwrap() == 2020 {
+      pair = combo.iter().copied().copied().collect();
       break;
     }
-
-    deque.pop_front();
   }
 
   // 462 * 1558 = 719_796
-  (entry_1.unwrap_or(0) * entry_2.unwrap_or(0)) as u64
+  (pair.iter().product1::<u32>().unwrap()) as u64
 }
 
 pub fn part_2(data: &[&str]) -> u64 {
@@ -85,12 +60,6 @@ pub fn part_2(data: &[&str]) -> u64 {
   (triple.iter().product1::<u32>().unwrap()) as u64
 }
 
-fn sort_data(data: Vec<u32>) -> Vec<u32> {
-  let mut copied_data = Vec::new();
-  copied_data.extend_from_slice(data.as_slice());
-  BinaryHeap::from(copied_data).into_sorted_vec()
-}
-
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -108,14 +77,6 @@ mod tests {
     assert_eq!(
       part_2(&vec!["1721", "979", "366", "299", "675", "1456"]),
       241_861_950
-    );
-  }
-
-  #[test]
-  fn test_sort_data() {
-    assert_eq!(
-      sort_data(vec![1721, 979, 366, 299, 675, 1456]),
-      vec![299, 366, 675, 979, 1456, 1721]
     );
   }
 }
