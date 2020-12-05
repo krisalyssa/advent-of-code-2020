@@ -1,16 +1,15 @@
-// use regex::Regex;
+use std::fmt;
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
-// use std::iter::FromIterator;
 use std::time::{Duration, Instant};
 
 //*********************************************************
 // related to running days
 //
 
-pub type PartFn = fn(&Vec<&str>) -> u64;
+pub type PartFn = fn(&[&str]) -> u64;
 
 pub struct Part {
   fun: PartFn,
@@ -43,7 +42,7 @@ impl Day {
     }
   }
 
-  pub fn run(&mut self, data: &Vec<String>) {
+  pub fn run(&mut self, data: &[String]) {
     let data_as_strs: Vec<&str> = data.iter().map(|v| v.as_str()).collect();
 
     let start_part_1 = Instant::now();
@@ -54,50 +53,41 @@ impl Day {
     self.part_2.duration = start_part_2.elapsed();
     self.duration = start_part_1.elapsed();
   }
+}
 
-  pub fn to_string(&self) -> String {
-    format!(
-      "Time: part 1 = {} µs, part 2 = {} µs, total = {} µs",
-      self.part_1.duration.as_micros(),
-      self.part_2.duration.as_micros(),
-      self.duration.as_micros()
-    )
+impl fmt::Display for Day {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    let (value_1, units_1) = scale_duration(self.part_1.duration);
+    let (value_2, units_2) = scale_duration(self.part_2.duration);
+    let (value_total, units_total) = scale_duration(self.duration);
+
+    f.write_fmt(format_args!(
+      "Time: part 1 = {} {}, part 2 = {} {}, total = {} {}",
+      value_1, units_1, value_2, units_2, value_total, units_total
+    ))
   }
 }
 
-// pub fn load_csv(filename: &str) -> io::Result<Vec<String>> {
-//   let f = File::open(filename)?;
-//   load_csv_from_reader(f)
-// }
+fn scale_duration(duration: Duration) -> (u128, &'static str) {
+  let nanos = duration.as_nanos();
 
-// fn load_csv_from_reader<R: Read>(raw_reader: R) -> io::Result<Vec<String>> {
-//   let reader = BufReader::new(raw_reader);
-//   let v: Vec<String> = reader
-//     .lines()
-//     .map(|value| match value {
-//       Ok(v) => v,
-//       _ => "".to_string(),
-//     })
-//     .map(|line| {
-//       let re = Regex::new(r"\s*,\s*").unwrap();
-//       let fields: Vec<String> = re.split(&line).map(|field| String::from(field)).collect();
-//       fields
-//     })
-//     .flatten()
-//     .collect();
+  if nanos >= 1_000_000_000 {
+    (duration.as_secs().into(), "s")
+  } else if nanos >= 1_000_000 {
+    (duration.as_millis(), "ms")
+  } else if nanos >= 1_000 {
+    (duration.as_micros(), "µs")
+  } else {
+    (nanos, "ns")
+  }
+}
 
-//   Ok(v)
-// }
-
-pub fn load_data<'a>(filename: &str, data: &'a mut Vec<String>) -> io::Result<&'a Vec<String>> {
+pub fn load_data<'a>(filename: &str, data: &'a mut Vec<String>) -> io::Result<&'a [String]> {
   let f = File::open(filename)?;
   load_data_from_reader(f, data)
 }
 
-fn load_data_from_reader<R: Read>(
-  raw_reader: R,
-  data: &mut Vec<String>,
-) -> io::Result<&Vec<String>> {
+fn load_data_from_reader<R: Read>(raw_reader: R, data: &mut Vec<String>) -> io::Result<&[String]> {
   let reader = BufReader::new(raw_reader);
   for line in reader.lines() {
     match line {
@@ -112,29 +102,6 @@ fn load_data_from_reader<R: Read>(
 mod tests {
   use super::*;
 
-  //   #[test]
-  //   fn test_load_csv_from_reader() {
-  //     let data = "\
-  // one,two,three
-  // ";
-  //     match load_csv_from_reader(data.as_bytes()) {
-  //       Ok(v) => assert_eq!(v, vec!["one", "two", "three"]),
-  //       Err(err) => panic!("returned error: {}", err),
-  //     }
-  //   }
-
-  //   #[test]
-  //   fn test_load_multiline_csv_from_reader() {
-  //     let data = "\
-  // one,two,three
-  // four,five,six
-  // ";
-  //     match load_csv_from_reader(data.as_bytes()) {
-  //       Ok(v) => assert_eq!(v, vec!["one", "two", "three", "four", "five", "six"]),
-  //       Err(err) => panic!("returned error: {}", err),
-  //     }
-  //   }
-
   #[test]
   fn test_load_data_from_reader() {
     let raw_data = String::from("one\ntwo\nthree");
@@ -142,7 +109,7 @@ mod tests {
 
     match load_data_from_reader(raw_data.as_bytes(), &mut data) {
       Ok(v) => assert_eq!(
-        *v,
+        (*v).iter().map(String::from).collect::<Vec<String>>(),
         vec!["one", "two", "three"]
           .iter()
           .map(|item| item.to_string())

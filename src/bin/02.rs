@@ -5,7 +5,7 @@ use unicode_segmentation::UnicodeSegmentation;
 pub fn main() {
   let mut data: Vec<String> = vec![];
 
-  if let Ok(_) = common::load_data("data/day-02-input.txt", &mut data) {
+  if common::load_data("data/day-02-input.txt", &mut data).is_ok() {
     let part_1 = Part::new(part_1);
     let part_2 = Part::new(part_2);
 
@@ -23,14 +23,14 @@ pub fn main() {
   }
 }
 
-pub fn part_1(data: &Vec<&str>) -> u64 {
+pub fn part_1(data: &[&str]) -> u64 {
   data
     .iter()
     .filter(|rule| check_password_against_sled_rule(rule))
     .count() as u64
 }
 
-pub fn part_2(data: &Vec<&str>) -> u64 {
+pub fn part_2(data: &[&str]) -> u64 {
   data
     .iter()
     .filter(|rule| check_password_against_toboggan_rule(rule))

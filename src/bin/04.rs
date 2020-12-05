@@ -2,13 +2,10 @@ use common::{Day, Part};
 use regex::Regex;
 use std::collections::HashMap;
 
-#[macro_use]
-extern crate maplit;
-
 pub fn main() {
   let mut data: Vec<String> = vec![];
 
-  if let Ok(_) = common::load_data("data/day-04-input.txt", &mut data) {
+  if common::load_data("data/day-04-input.txt", &mut data).is_ok() {
     let part_1 = Part::new(part_1);
     let part_2 = Part::new(part_2);
 
@@ -26,7 +23,7 @@ pub fn main() {
   }
 }
 
-pub fn part_1(data: &Vec<&str>) -> u64 {
+pub fn part_1(data: &[&str]) -> u64 {
   let mut buffer: Vec<String> = vec![];
 
   merge_records(&data, &mut buffer)
@@ -35,7 +32,7 @@ pub fn part_1(data: &Vec<&str>) -> u64 {
     .count() as u64
 }
 
-pub fn part_2(data: &Vec<&str>) -> u64 {
+pub fn part_2(data: &[&str]) -> u64 {
   let mut buffer: Vec<String> = vec![];
 
   merge_records(&data, &mut buffer)
@@ -133,17 +130,12 @@ fn is_valid_record(record: &HashMap<&str, &str>) -> bool {
 fn merge_line_into_record(acc: &mut Vec<String>, line: &str) {
   if line.is_empty() {
     acc.push("".to_string());
-  } else {
-    if let Some(buffer) = acc.last_mut() {
-      *buffer = [buffer, line].join(" ");
-    }
+  } else if let Some(buffer) = acc.last_mut() {
+    *buffer = [buffer, line].join(" ");
   };
 }
 
-fn merge_records<'a>(
-  data: &Vec<&str>,
-  buffer: &'a mut Vec<String>,
-) -> Vec<HashMap<&'a str, &'a str>> {
+fn merge_records<'a>(data: &[&str], buffer: &'a mut Vec<String>) -> Vec<HashMap<&'a str, &'a str>> {
   if buffer.is_empty() {
     buffer.push("".to_string())
   };
@@ -178,6 +170,7 @@ fn split_field_and_value(fav: &str) -> (&str, &str) {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use maplit::hashmap;
 
   #[test]
   fn test_part_1() {
