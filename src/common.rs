@@ -54,15 +54,30 @@ impl Day {
   }
 
   pub fn to_string(&self) -> String {
+    let (value_1, units_1) = scale_duration(self.part_1.duration);
+    let (value_2, units_2) = scale_duration(self.part_2.duration);
+    let (value_total, units_total) = scale_duration(self.duration);
+
     format!(
-      "Time: part 1 = {} µs, part 2 = {} µs, total = {} µs",
-      self.part_1.duration.as_micros(),
-      self.part_2.duration.as_micros(),
-      self.duration.as_micros()
+      "Time: part 1 = {} {}, part 2 = {} {}, total = {} {}",
+      value_1, units_1, value_2, units_2, value_total, units_total
     )
   }
 }
 
+fn scale_duration(duration: Duration) -> (u128, &'static str) {
+  let nanos = duration.as_nanos();
+
+  if nanos >= 1_000_000_000 {
+    (duration.as_secs().into(), "s")
+  } else if nanos >= 1_000_000 {
+    (duration.as_millis(), "ms")
+  } else if nanos >= 1_000 {
+    (duration.as_micros(), "µs")
+  } else {
+    (nanos, "ns")
+  }
+}
 
 pub fn load_data<'a>(filename: &str, data: &'a mut Vec<String>) -> io::Result<&'a Vec<String>> {
   let f = File::open(filename)?;
