@@ -5,7 +5,7 @@ use std::collections::{BinaryHeap, VecDeque};
 pub fn main() {
   let mut data: Vec<String> = vec![];
 
-  if let Ok(_) = common::load_data("data/day-01-input.txt", &mut data) {
+  if common::load_data("data/day-01-input.txt", &mut data).is_ok() {
     let part_1 = Part::new(part_1);
     let part_2 = Part::new(part_2);
 
@@ -23,7 +23,7 @@ pub fn main() {
   }
 }
 
-pub fn part_1(data: &Vec<&str>) -> u64 {
+pub fn part_1(data: &[&str]) -> u64 {
   let parsed_data: Vec<u32> = data
     .iter()
     .filter_map(|value| value.parse::<u32>().ok())
@@ -66,7 +66,7 @@ pub fn part_1(data: &Vec<&str>) -> u64 {
   (entry_1.unwrap_or(0) * entry_2.unwrap_or(0)) as u64
 }
 
-pub fn part_2(data: &Vec<&str>) -> u64 {
+pub fn part_2(data: &[&str]) -> u64 {
   let parsed_data: Vec<u32> = data
     .iter()
     .filter_map(|value| value.parse::<u32>().ok())
@@ -75,12 +75,8 @@ pub fn part_2(data: &Vec<&str>) -> u64 {
   let mut triple: Vec<u32> = Vec::new();
 
   for combo in parsed_data.iter().combinations(3) {
-    if combo.iter().map(|item| *item).sum1::<u32>().unwrap() == 2020 {
-      triple = combo
-        .iter()
-        .map(|item| *item)
-        .map(|item| *item)
-        .collect_vec();
+    if combo.iter().copied().sum1::<u32>().unwrap() == 2020 {
+      triple = combo.iter().copied().copied().collect();
       break;
     }
   }

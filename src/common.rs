@@ -1,3 +1,4 @@
+use std::fmt;
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
@@ -8,7 +9,7 @@ use std::time::{Duration, Instant};
 // related to running days
 //
 
-pub type PartFn = fn(&Vec<&str>) -> u64;
+pub type PartFn = fn(&[&str]) -> u64;
 
 pub struct Part {
   fun: PartFn,
@@ -41,7 +42,7 @@ impl Day {
     }
   }
 
-  pub fn run(&mut self, data: &Vec<String>) {
+  pub fn run(&mut self, data: &[String]) {
     let data_as_strs: Vec<&str> = data.iter().map(|v| v.as_str()).collect();
 
     let start_part_1 = Instant::now();
@@ -52,16 +53,18 @@ impl Day {
     self.part_2.duration = start_part_2.elapsed();
     self.duration = start_part_1.elapsed();
   }
+}
 
-  pub fn to_string(&self) -> String {
+impl fmt::Display for Day {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     let (value_1, units_1) = scale_duration(self.part_1.duration);
     let (value_2, units_2) = scale_duration(self.part_2.duration);
     let (value_total, units_total) = scale_duration(self.duration);
 
-    format!(
+    f.write_fmt(format_args!(
       "Time: part 1 = {} {}, part 2 = {} {}, total = {} {}",
       value_1, units_1, value_2, units_2, value_total, units_total
-    )
+    ))
   }
 }
 
@@ -79,15 +82,12 @@ fn scale_duration(duration: Duration) -> (u128, &'static str) {
   }
 }
 
-pub fn load_data<'a>(filename: &str, data: &'a mut Vec<String>) -> io::Result<&'a Vec<String>> {
+pub fn load_data<'a>(filename: &str, data: &'a mut Vec<String>) -> io::Result<&'a [String]> {
   let f = File::open(filename)?;
   load_data_from_reader(f, data)
 }
 
-fn load_data_from_reader<R: Read>(
-  raw_reader: R,
-  data: &mut Vec<String>,
-) -> io::Result<&Vec<String>> {
+fn load_data_from_reader<R: Read>(raw_reader: R, data: &mut Vec<String>) -> io::Result<&[String]> {
   let reader = BufReader::new(raw_reader);
   for line in reader.lines() {
     match line {
@@ -109,7 +109,7 @@ mod tests {
 
     match load_data_from_reader(raw_data.as_bytes(), &mut data) {
       Ok(v) => assert_eq!(
-        *v,
+        (*v).iter().map(String::from).collect::<Vec<String>>(),
         vec!["one", "two", "three"]
           .iter()
           .map(|item| item.to_string())
