@@ -2,9 +2,6 @@ use common::{Day, Part};
 use regex::Regex;
 use std::collections::HashMap;
 
-#[macro_use]
-extern crate maplit;
-
 pub fn main() {
   let mut data: Vec<String> = vec![];
 
@@ -178,6 +175,7 @@ fn split_field_and_value(fav: &str) -> (&str, &str) {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use maplit::hashmap;
 
   #[test]
   fn test_part_1() {
