@@ -1,5 +1,7 @@
 use common::{Day, Part};
 use regex::Regex;
+use std::collections::HashSet;
+use std::iter::FromIterator;
 use std::ops::Range;
 
 pub fn main() {
@@ -14,7 +16,7 @@ pub fn main() {
     day.run(&data);
 
     assert_eq!(930, day.part_1.result);
-    // assert_eq!(167, day.part_2.result);
+    assert_eq!(515, day.part_2.result);
 
     println!("{}", day.to_string());
   } else {
@@ -26,15 +28,23 @@ pub fn main() {
 pub fn part_1(data: &[&str]) -> u64 {
   data
     .iter()
-    .map(|pass| row_column_from_boarding_pass(pass))
-    .map(|(row, column)| id_from_row_column(row, column))
+    .map(|pass| id_from_boarding_pass(pass))
     .max()
     .unwrap()
     .into()
 }
 
-pub fn part_2(_data: &[&str]) -> u64 {
-  0
+pub fn part_2(data: &[&str]) -> u64 {
+  let occupied_seats: HashSet<u32> =
+    HashSet::from_iter(data.iter().map(|pass| id_from_boarding_pass(pass)));
+  (0..(128 * 8 - 1))
+    .find(|id| {
+      !occupied_seats.contains(id)
+        && occupied_seats.contains(&(id - 1))
+        && occupied_seats.contains(&(id + 1))
+    })
+    .unwrap()
+    .into()
 }
 
 fn binary_search(r: &Range<u32>, sequence: &str, bottom: char, top: char) -> u32 {
@@ -60,8 +70,9 @@ fn column_from_boarding_pass(part: &str) -> u32 {
   binary_search(&(0..7), part, 'L', 'R')
 }
 
-fn id_from_row_column(row: u32, col: u32) -> u32 {
-  (row * 8) + col
+fn id_from_boarding_pass(pass: &str) -> u32 {
+  let (row, column) = row_column_from_boarding_pass(pass);
+  (row * 8) + column
 }
 
 fn midpoint_of_range(r: &Range<u32>) -> u32 {
@@ -94,13 +105,6 @@ mod tests {
   }
 
   #[test]
-  fn test_part_2() {
-    let data = vec![];
-
-    assert_eq!(part_2(&data), 0);
-  }
-
-  #[test]
   fn test_binary_search() {
     assert_eq!(binary_search(&(0..127), "FBFBBFF", 'F', 'B'), 44);
     assert_eq!(binary_search(&(0..7), "RLR", 'L', 'R'), 5);
@@ -114,10 +118,10 @@ mod tests {
   }
 
   #[test]
-  fn test_id_from_row_column() {
-    assert_eq!(id_from_row_column(70, 7), 567);
-    assert_eq!(id_from_row_column(14, 7), 119);
-    assert_eq!(id_from_row_column(102, 4), 820);
+  fn test_id_from_boarding_pass() {
+    assert_eq!(id_from_boarding_pass("BFFFBBFRRR"), 567);
+    assert_eq!(id_from_boarding_pass("FFFBBBFRRR"), 119);
+    assert_eq!(id_from_boarding_pass("BBFFBBFRLL"), 820);
   }
 
   #[test]
