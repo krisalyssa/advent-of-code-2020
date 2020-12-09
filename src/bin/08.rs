@@ -17,6 +17,7 @@ struct Device<'a> {
 }
 
 const ACC: &'static str = "acc";
+const HLT: &'static str = "hlt";
 const JMP: &'static str = "jmp";
 const NOP: &'static str = "nop";
 
@@ -50,53 +51,72 @@ impl<'a> Device<'a> {
       panic!(
         "memory out-of-bounds exception: tried to read from {}; valid range is 0..{}",
         addr,
+        self.ram.len() - 1
+      );
+    }
+  }
+
+  pub fn poke(&mut self, addr: usize, value: Instruction<'a>) {
+    if let Some(ptr) = self.ram.get_mut(addr) {
+      *ptr = value;
+    } else {
+      panic!(
+        "memory out-of-bounds exception: tried to write to {}; valid range is 0..{}",
+        addr,
         self.ram.len()
       );
     }
   }
 
-  // pub fn poke(&mut self, addr: usize, value: Instruction<'a>) {
-  //   if let Some(ptr) = self.ram.get_mut(addr) {
-  //     *ptr = value;
-  //   } else {
-  //     panic!(
-  //       "memory out-of-bounds exception: tried to write to {}; valid range is 0..{}",
-  //       addr,
-  //       self.ram.len()
-  //     );
-  //   }
-  // }
-
-  pub fn run(&mut self) -> Option<Argument> {
-    let mut retval = None;
+  pub fn run(&mut self) -> (Option<Operation>, Argument) {
+    let mut last_operation = None;
 
     loop {
       if let Some(limit) = self.instructions_limit {
         self.instructions_executed += 1;
         if self.instructions_executed > limit {
-          eprintln!(
-            "execution halted after {} instructions: pc = {}, acc = {}",
-            limit, self.pc, self.acc
-          );
+          if self.trace_enabled {
+            eprintln!(
+              "execution halted after {} instructions: pc = {}, acc = {}",
+              limit, self.pc, self.acc
+            );
+          }
           break;
         }
       }
 
       if !self.visited_locations.insert(self.pc) {
-        retval = Some(self.acc);
+        if self.trace_enabled {
+          eprintln!(
+            "execution halted because instruction was revisited: pc = {}, acc = {}",
+            self.pc, self.acc
+          );
+        }
         break;
       }
 
-      let (operation, argument) = self.peek(self.pc);
+      let (operation, argument) = self.fetch_instruction();
       match operation {
         ACC => self.op_acc(argument),
+        HLT => {
+          last_operation = Some(HLT);
+          break;
+        }
         JMP => self.op_jmp(argument),
         NOP => self.op_nop(argument),
         _ => panic!("unknown operation: {}", operation),
       }
     }
 
-    retval
+    (last_operation, self.acc)
+  }
+
+  fn fetch_instruction(&self) -> Instruction {
+    if self.pc >= self.ram.len() {
+      (HLT, 0)
+    } else {
+      self.peek(self.pc)
+    }
   }
 
   fn op_acc(&mut self, argument: Argument) {
@@ -139,7 +159,7 @@ pub fn main() {
     day.run(&data);
 
     assert_eq!(1675, day.part_1.result);
-    assert_eq!(0, day.part_2.result);
+    assert_eq!(1532, day.part_2.result);
 
     println!("{}", day.to_string());
   } else {
@@ -150,15 +170,36 @@ pub fn main() {
 
 pub fn part_1(data: &[&str]) -> u64 {
   let mut device = Device::from_slice(data);
-  if let Some(retval) = device.run() {
-    retval as u64
+  if let (None, argument) = device.run() {
+    argument as u64
   } else {
     panic!("device did not return a value");
   }
 }
 
-pub fn part_2(_data: &[&str]) -> u64 {
-  0
+pub fn part_2(data: &[&str]) -> u64 {
+  let mut retval = None;
+
+  for (ix, _) in data.iter().enumerate() {
+    let mut device = Device::from_slice(data);
+
+    match device.peek(ix) {
+      (JMP, argument) => device.poke(ix, (NOP, argument)),
+      (NOP, argument) => device.poke(ix, (JMP, argument)),
+      _ => continue,
+    }
+
+    if let (Some(HLT), argument) = device.run() {
+      retval = Some(argument);
+      break;
+    }
+  }
+
+  if let Some(r) = retval {
+    r as u64
+  } else {
+    panic!("device did not return a value");
+  }
 }
 
 #[cfg(test)]
@@ -175,7 +216,9 @@ mod tests {
 
   #[test]
   fn test_part_2() {
-    let data = vec![];
-    assert_eq!(part_2(&data), 0);
+    let data = vec![
+      "nop +0", "acc +1", "jmp +4", "acc +3", "jmp -3", "acc -99", "acc +1", "jmp -4", "acc +6",
+    ];
+    assert_eq!(part_2(&data), 8);
   }
 }
