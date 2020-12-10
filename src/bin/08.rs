@@ -16,10 +16,10 @@ struct Device<'a> {
   trace_enabled: bool,
 }
 
-const ACC: &'static str = "acc";
-const HLT: &'static str = "hlt";
-const JMP: &'static str = "jmp";
-const NOP: &'static str = "nop";
+const ACC: &str = "acc";
+const HLT: &str = "hlt";
+const JMP: &str = "jmp";
+const NOP: &str = "nop";
 
 impl<'a> Device<'a> {
   pub fn from_slice(image: &'a [&'a str]) -> Device<'a> {
