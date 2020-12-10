@@ -14,7 +14,7 @@ pub fn main() {
     day.run(&data);
 
     assert_eq!(756008079, day.part_1.result);
-    // assert_eq!(1532, day.part_2.result);
+    assert_eq!(93727241, day.part_2.result);
 
     println!("{}", day.to_string());
   } else {
@@ -24,15 +24,19 @@ pub fn main() {
 }
 
 pub fn part_1(data: &[&str]) -> u64 {
-  if let Some(retval) = find_weakness(data, 25) {
+  if let Some(retval) = find_first_step(data, 25) {
     retval as u64
   } else {
     0
   }
 }
 
-pub fn part_2(_data: &[&str]) -> u64 {
-  0
+pub fn part_2(data: &[&str]) -> u64 {
+  if let Some(retval) = find_weakness(data, 756008079) {
+    retval as u64
+  } else {
+    0
+  }
 }
 
 fn initialize(
@@ -55,7 +59,7 @@ fn initialize(
   window.append(&mut preamble_as_vecdeque);
 }
 
-fn find_weakness(data: &[&str], preamble_size: usize) -> Option<u32> {
+fn find_first_step(data: &[&str], preamble_size: usize) -> Option<u32> {
   let mut window: VecDeque<u32> = VecDeque::with_capacity(preamble_size);
   let mut remaining: Vec<u32> = Vec::with_capacity(data.len() - preamble_size);
   initialize(&data, preamble_size, &mut window, &mut remaining);
@@ -78,15 +82,52 @@ fn find_weakness(data: &[&str], preamble_size: usize) -> Option<u32> {
   retval
 }
 
+fn find_weakness(data: &[&str], invalid_number: u32) -> Option<u32> {
+  let dataset: Vec<u32> = data
+    .iter()
+    .filter_map(|value| value.parse::<u32>().ok())
+    .collect();
+
+  let mut found: Option<(usize, usize)> = None;
+
+  for window_size in 2..dataset.len() {
+    dataset.windows(window_size).enumerate().find(|(ix, w)| {
+      if w.iter().sum::<u32>() == invalid_number {
+        found = Some((*ix, window_size));
+        true
+      } else {
+        false
+      }
+    });
+  }
+
+  if let Some((window_start, window_size)) = found {
+    let min = dataset[window_start..window_start + window_size - 1]
+      .iter()
+      .min()
+      .unwrap();
+    let max = dataset[window_start..window_start + window_size - 1]
+      .iter()
+      .max()
+      .unwrap();
+    Some((min + max) as u32)
+  } else {
+    None
+  }
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
   use std::str::FromStr;
 
   #[test]
-  fn test_part_2() {
-    let data = vec![];
-    assert_eq!(part_2(&data), 0);
+  fn test_find_first_step() {
+    let data = vec![
+      "35", "20", "15", "25", "47", "40", "62", "55", "65", "95", "102", "117", "150", "182",
+      "127", "219", "299", "277", "309", "576",
+    ];
+    assert_eq!(find_first_step(&data, 5).unwrap(), 127);
   }
 
   #[test]
@@ -95,7 +136,7 @@ mod tests {
       "35", "20", "15", "25", "47", "40", "62", "55", "65", "95", "102", "117", "150", "182",
       "127", "219", "299", "277", "309", "576",
     ];
-    assert_eq!(find_weakness(&data, 5).unwrap(), 127);
+    assert_eq!(find_weakness(&data, 127).unwrap(), 62);
   }
 
   #[test]
