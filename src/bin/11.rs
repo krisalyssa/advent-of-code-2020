@@ -13,7 +13,7 @@ pub fn main() {
     day.run(&data);
 
     assert_eq!(2476, day.part_1.result);
-    assert_eq!(0, day.part_2.result);
+    assert_eq!(2257, day.part_2.result);
 
     println!("{}", day.to_string());
   } else {
@@ -34,8 +34,18 @@ pub fn part_1(data: &[&str]) -> u64 {
   room.count_occupied_seats() as u64
 }
 
-pub fn part_2(_data: &[&str]) -> u64 {
-  0
+pub fn part_2(data: &[&str]) -> u64 {
+  let mut room = Room::from(data);
+  room.max_loops = *[room.width, room.height].iter().min().unwrap();
+  room.max_neighbors = 5;
+
+  for _ in 0..100 {
+    if !room.step() {
+      break;
+    }
+  }
+
+  room.count_occupied_seats() as u64
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -67,6 +77,8 @@ impl Cell {
 struct Room {
   width: i32,
   height: i32,
+  max_loops: i32,
+  max_neighbors: u8,
   cells: Vec<Option<Cell>>,
 }
 
@@ -75,6 +87,8 @@ impl Room {
     Room {
       width: 0,
       height: 0,
+      max_loops: 1,
+      max_neighbors: 4,
       cells: vec![],
     }
   }
@@ -152,8 +166,30 @@ impl Room {
     };
 
     deltas.iter().fold(0, |acc, (dx, dy)| {
-      acc + self.get_occupied(cell.x + dx, cell.y + dy)
+      acc
+        + if self.check_sightline(cell, *dx, *dy) {
+          1
+        } else {
+          0
+        }
     })
+  }
+
+  fn check_sightline(&self, cell: Cell, dx: i32, dy: i32) -> bool {
+    for n in 1..=self.max_loops {
+      let other_x: i32 = cell.x + (dx * n);
+      let other_y: i32 = cell.y + (dy * n);
+
+      if other_x < 0 || other_x >= self.width || other_y < 0 || other_y >= self.height {
+        break;
+      }
+
+      match self.get(other_x, other_y) {
+        Some(other) => return other.occupied,
+        None => {}
+      }
+    }
+    false
   }
 
   fn count_occupied_seats(&self) -> u32 {
@@ -177,19 +213,6 @@ impl Room {
     }
   }
 
-  fn get_occupied(&self, x: i32, y: i32) -> u8 {
-    match self.get(x, y) {
-      Some(cell) => {
-        if cell.occupied {
-          1
-        } else {
-          0
-        }
-      }
-      None => 0,
-    }
-  }
-
   fn resize(&mut self, width: i32, height: i32) {
     self.width = width;
     self.height = height;
@@ -209,7 +232,7 @@ impl Room {
             .as_mut()
             .unwrap()
             .occupied = true;
-        } else if c.occupied && neighbors >= 4 {
+        } else if c.occupied && neighbors >= self.max_neighbors {
           next_gen
             .get_mut(((c.y * self.width) + c.x) as usize)
             .unwrap()
@@ -279,8 +302,7 @@ mod tests {
 
   #[test]
   fn test_part_2() {
-    let data = vec![];
-    assert_eq!(part_2(&data), 0);
+    assert_eq!(part_2(get_test_data()), 26);
   }
 
   #[test]
