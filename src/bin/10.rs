@@ -51,11 +51,11 @@ fn adapters(data: &[&str]) -> Vec<u32> {
     .iter()
     .filter_map(|value| value.parse::<u32>().ok())
     .collect();
-  parsed_data.sort();
+  parsed_data.sort_unstable();
   parsed_data
 }
 
-fn chain_adapters(adapters: &Vec<u32>) -> VecDeque<u32> {
+fn chain_adapters(adapters: &[u32]) -> VecDeque<u32> {
   let mut chain: VecDeque<u32> = VecDeque::from_iter((*adapters).iter().copied());
   chain.push_front(0);
   let largest_adapter: u32 = *chain.back().unwrap();
@@ -64,14 +64,14 @@ fn chain_adapters(adapters: &Vec<u32>) -> VecDeque<u32> {
   chain
 }
 
-fn count_differences_of_span(adapters: &Vec<u32>, span: usize) -> usize {
-  differences(adapters)
+fn count_differences_of_span(adapters: &[u32], span: usize) -> usize {
+  differences(&adapters.to_vec())
     .iter()
     .filter(|d| **d == span as u32)
     .count()
 }
 
-fn differences(adapters: &Vec<u32>) -> Vec<u32> {
+fn differences(adapters: &[u32]) -> Vec<u32> {
   let chain = chain_adapters(adapters);
 
   Vec::from(chain)
@@ -80,7 +80,7 @@ fn differences(adapters: &Vec<u32>) -> Vec<u32> {
     .collect()
 }
 
-fn indexes_of_threes(differences: &Vec<u32>) -> Vec<u32> {
+fn indexes_of_threes(differences: &[u32]) -> Vec<u32> {
   differences
     .iter()
     .enumerate()
@@ -89,7 +89,7 @@ fn indexes_of_threes(differences: &Vec<u32>) -> Vec<u32> {
     .collect()
 }
 
-fn span_lengths_of_one(indexes_of_threes: &Vec<u32>) -> Vec<u32> {
+fn span_lengths_of_one(indexes_of_threes: &[u32]) -> Vec<u32> {
   let mut v: Vec<u32> = Vec::from_iter((*indexes_of_threes).iter().copied());
   v.insert(0, 0);
   v.windows(2).map(|pair| pair[1] - pair[0] - 1).collect()

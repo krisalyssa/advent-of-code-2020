@@ -58,8 +58,8 @@ struct Cell {
 impl Cell {
   fn new(x: i32, y: i32) -> Cell {
     Cell {
-      x: x,
-      y: y,
+      x,
+      y,
       occupied: false,
     }
   }
@@ -112,7 +112,7 @@ impl Room {
     room
   }
 
-  fn changed(&self, next_gen: &Vec<Option<Cell>>) -> bool {
+  fn changed(&self, next_gen: &[Option<Cell>]) -> bool {
     self
       .cells
       .iter()
@@ -143,26 +143,24 @@ impl Room {
         // right edge
         vec![(0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1)]
       }
+    } else if cell.y == 0 {
+      // top edge
+      vec![(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0)]
+    } else if cell.y == self.height - 1 {
+      // bottom edge
+      vec![(-1, 0), (-1, -1), (0, -1), (1, -1), (1, 0)]
     } else {
-      if cell.y == 0 {
-        // top edge
-        vec![(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0)]
-      } else if cell.y == self.height - 1 {
-        // bottom edge
-        vec![(-1, 0), (-1, -1), (0, -1), (1, -1), (1, 0)]
-      } else {
-        // body
-        vec![
-          (-1, 0),
-          (-1, -1),
-          (0, -1),
-          (1, -1),
-          (1, 0),
-          (1, 1),
-          (0, 1),
-          (-1, 1),
-        ]
-      }
+      // body
+      vec![
+        (-1, 0),
+        (-1, -1),
+        (0, -1),
+        (1, -1),
+        (1, 0),
+        (1, 1),
+        (0, 1),
+        (-1, 1),
+      ]
     };
 
     deltas.iter().fold(0, |acc, (dx, dy)| {
@@ -184,10 +182,9 @@ impl Room {
         break;
       }
 
-      match self.get(other_x, other_y) {
-        Some(other) => return other.occupied,
-        None => {}
-      }
+      if let Some(other) = self.get(other_x, other_y) {
+        return other.occupied;
+      };
     }
     false
   }
@@ -204,12 +201,10 @@ impl Room {
   fn get(&self, x: i32, y: i32) -> Option<Cell> {
     if x >= self.width {
       None
+    } else if let Some(Some(cell_ref)) = self.cells.get(((y * self.width) + x) as usize) {
+      Some(*cell_ref)
     } else {
-      if let Some(Some(cell_ref)) = self.cells.get(((y * self.width) + x) as usize) {
-        Some(*cell_ref)
-      } else {
-        None
-      }
+      None
     }
   }
 
