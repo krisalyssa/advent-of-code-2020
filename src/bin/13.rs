@@ -100,6 +100,8 @@ pub fn part_2(data: &[&str]) -> u64 {
   chinese_remainder(&residues, &modulii).unwrap() as u64
 }
 
+// https://rosettacode.org/wiki/Chinese_remainder_theorem#Rust
+
 fn chinese_remainder(residues: &[i64], modulii: &[i64]) -> Option<i64> {
   let prod = modulii.iter().product::<i64>();
   let mut sum = 0;
