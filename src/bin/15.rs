@@ -18,7 +18,7 @@ pub fn main() {
     day.run(&data);
 
     assert_eq!(1373, day.part_1.result);
-    assert_eq!(0, day.part_2.result);
+    assert_eq!(112458, day.part_2.result);
 
     println!("{}", day.to_string());
   } else {
@@ -78,8 +78,15 @@ pub fn part_1(data: &[&str]) -> u64 {
   game.next_number() as u64
 }
 
-pub fn part_2(_data: &[&str]) -> u64 {
-  0
+pub fn part_2(data: &[&str]) -> u64 {
+  let initial: Vec<u32> = data.iter().map(|s| u32::from_str(s).unwrap()).collect();
+
+  let mut game = Game::new(&initial);
+  for _ in 1..30_000_000 {
+    game.take_turn();
+  }
+
+  game.next_number() as u64
 }
 
 #[cfg(test)]
@@ -99,8 +106,13 @@ mod tests {
 
   #[test]
   fn test_part_2() {
-    let data = vec![];
-    assert_eq!(part_2(&data), 0);
+    assert_eq!(part_2(&vec!["0", "3", "6"]), 175594);
+    assert_eq!(part_2(&vec!["1", "3", "2"]), 2578);
+    assert_eq!(part_2(&vec!["2", "1", "3"]), 3544142);
+    assert_eq!(part_2(&vec!["1", "2", "3"]), 261214);
+    assert_eq!(part_2(&vec!["2", "3", "1"]), 6895259);
+    assert_eq!(part_2(&vec!["3", "2", "1"]), 18);
+    assert_eq!(part_2(&vec!["3", "1", "2"]), 362);
   }
 
   #[test]
