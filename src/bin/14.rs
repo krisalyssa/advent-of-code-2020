@@ -43,7 +43,7 @@ impl PortComputerMk1 {
     }
   }
 
-  fn execute(&mut self, program: &Vec<Instruction>) {
+  fn execute(&mut self, program: &[Instruction]) {
     for instruction in program {
       match instruction {
         Instruction::Mask(mask) => self.exec_mask(&mask),
@@ -52,11 +52,11 @@ impl PortComputerMk1 {
     }
   }
 
-  fn exec_mask(&mut self, mask: &String) {
+  fn exec_mask(&mut self, mask: &str) {
     self.mask = mask.to_string();
   }
 
-  fn exec_mem(&mut self, address: &String, value: &String) {
+  fn exec_mem(&mut self, address: &str, value: &str) {
     self
       .mem
       .insert(address.to_owned(), mask_mem_value(value, &self.mask));
@@ -76,7 +76,7 @@ impl PortComputerMk2 {
     }
   }
 
-  fn execute(&mut self, program: &Vec<Instruction>) {
+  fn execute(&mut self, program: &[Instruction]) {
     for instruction in program {
       match instruction {
         Instruction::Mask(mask) => self.exec_mask(&mask),
@@ -85,11 +85,11 @@ impl PortComputerMk2 {
     }
   }
 
-  fn exec_mask(&mut self, mask: &String) {
+  fn exec_mask(&mut self, mask: &str) {
     self.mask = mask.to_string();
   }
 
-  fn exec_mem(&mut self, address: &String, value: &String) {
+  fn exec_mem(&mut self, address: &str, value: &str) {
     for addr in floating_addresses(&mask_address(address, &self.mask)) {
       self.mem.insert(addr.to_string(), value.to_string());
     }
@@ -148,8 +148,8 @@ fn compile(data: &[&str]) -> Vec<Instruction> {
   program
 }
 
-fn floating_addresses(address: &String) -> Vec<String> {
-  if let Some(ix) = address.find("X") {
+fn floating_addresses(address: &str) -> Vec<String> {
+  if let Some(ix) = address.find('X') {
     let mut bits_0 = address.to_string();
     bits_0.replace_range(ix..=ix, "0");
 
