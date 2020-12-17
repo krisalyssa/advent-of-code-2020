@@ -16,7 +16,7 @@ pub fn main() {
     day.run(&data);
 
     assert_eq!(319, day.part_1.result);
-    assert_eq!(0, day.part_2.result);
+    assert_eq!(2324, day.part_2.result);
 
     println!("{}", day.to_string());
   } else {
@@ -38,17 +38,24 @@ pub fn part_1(data: &[&str]) -> u64 {
   initialize_space(&data, &mut grid);
 
   for _ in 0..6 {
-    step(&mut grid);
+    step_3d(&mut grid);
   }
 
   grid.len() as u64
 }
 
-pub fn part_2(_data: &[&str]) -> u64 {
-  0
+pub fn part_2(data: &[&str]) -> u64 {
+  let mut grid: HashSet<Point> = HashSet::new();
+  initialize_space(&data, &mut grid);
+
+  for _ in 0..6 {
+    step_4d(&mut grid);
+  }
+
+  grid.len() as u64
 }
 
-fn count_neighbors(grid: &HashSet<Point>, cell: &Point) -> u8 {
+fn count_neighbors_3d(grid: &HashSet<Point>, cell: &Point) -> u8 {
   let mut count: u8 = 0;
 
   for x in (cell.0 - 1)..=(cell.0 + 1) {
@@ -59,6 +66,27 @@ fn count_neighbors(grid: &HashSet<Point>, cell: &Point) -> u8 {
         }
         if grid.contains(&(x, y, z, 0)) {
           count += 1
+        }
+      }
+    }
+  }
+
+  count
+}
+
+fn count_neighbors_4d(grid: &HashSet<Point>, cell: &Point) -> u8 {
+  let mut count: u8 = 0;
+
+  for x in (cell.0 - 1)..=(cell.0 + 1) {
+    for y in (cell.1 - 1)..=(cell.1 + 1) {
+      for z in (cell.2 - 1)..=(cell.2 + 1) {
+        for w in (cell.3 - 1)..=(cell.3 + 1) {
+          if x == cell.0 && y == cell.1 && z == cell.2 && w == cell.3 {
+            continue;
+          }
+          if grid.contains(&(x, y, z, w)) {
+            count += 1
+          }
         }
       }
     }
@@ -106,16 +134,36 @@ fn initialize_space(data: &[&str], grid: &mut HashSet<Point>) {
   }
 }
 
-fn step(grid: &mut HashSet<Point>) {
+fn step_3d(grid: &mut HashSet<Point>) {
   let previous: HashSet<Point> = HashSet::from_iter(grid.iter().copied());
   let (range_x, range_y, range_z, _range_w) = extents(&previous);
 
   for x in range_x.start() - 1..=range_x.end() + 1 {
     for y in range_y.start() - 1..=range_y.end() + 1 {
       for z in range_z.start() - 1..=range_z.end() + 1 {
-        for w in 0..=0 {
+        let previously_active = previous.contains(&(x, y, z, 0));
+        let count = count_neighbors_3d(&previous, &(x, y, z, 0));
+
+        if previously_active && !(2..=3).contains(&count) {
+          grid.remove(&(x, y, z, 0));
+        } else if !previously_active && count == 3 {
+          grid.insert((x, y, z, 0));
+        }
+      }
+    }
+  }
+}
+
+fn step_4d(grid: &mut HashSet<Point>) {
+  let previous: HashSet<Point> = HashSet::from_iter(grid.iter().copied());
+  let (range_x, range_y, range_z, range_w) = extents(&previous);
+
+  for x in range_x.start() - 1..=range_x.end() + 1 {
+    for y in range_y.start() - 1..=range_y.end() + 1 {
+      for z in range_z.start() - 1..=range_z.end() + 1 {
+        for w in range_w.start() - 1..=range_w.end() + 1 {
           let previously_active = previous.contains(&(x, y, z, w));
-          let count = count_neighbors(&previous, &(x, y, z, w));
+          let count = count_neighbors_4d(&previous, &(x, y, z, w));
 
           if previously_active && !(2..=3).contains(&count) {
             grid.remove(&(x, y, z, w));
@@ -140,19 +188,30 @@ mod tests {
 
   #[test]
   fn test_part_2() {
-    let data = vec![];
-    assert_eq!(part_2(&data), 0);
+    let data = vec![".#.", "..#", "###"];
+    assert_eq!(part_2(&data), 848);
   }
 
   #[test]
-  fn test_count_neighbors() {
+  fn test_count_neighbors_3d() {
     let mut grid: HashSet<Point> = HashSet::new();
-    assert_eq!(count_neighbors(&grid, &(0, 0, 0, 0)), 0);
+    assert_eq!(count_neighbors_3d(&grid, &(0, 0, 0, 0)), 0);
 
     let data = vec![".#.", "..#", "###"];
     initialize_space(&data, &mut grid);
-    assert_eq!(count_neighbors(&grid, &(0, 0, 0, 0)), 1);
-    assert_eq!(count_neighbors(&grid, &(1, 2, 0, 0)), 3);
+    assert_eq!(count_neighbors_3d(&grid, &(0, 0, 0, 0)), 1);
+    assert_eq!(count_neighbors_3d(&grid, &(1, 2, 0, 0)), 3);
+  }
+
+  #[test]
+  fn test_count_neighbors_4d() {
+    let mut grid: HashSet<Point> = HashSet::new();
+    assert_eq!(count_neighbors_4d(&grid, &(0, 0, 0, 0)), 0);
+
+    let data = vec![".#.", "..#", "###"];
+    initialize_space(&data, &mut grid);
+    assert_eq!(count_neighbors_4d(&grid, &(0, 0, 0, 0)), 1);
+    assert_eq!(count_neighbors_4d(&grid, &(1, 2, 0, 0)), 3);
   }
 
   #[test]
@@ -181,13 +240,24 @@ mod tests {
   }
 
   #[test]
-  fn test_step() {
+  fn test_step_3d() {
     let data = vec![".#.", "..#", "###"];
     let mut grid: HashSet<Point> = HashSet::new();
     initialize_space(&data, &mut grid);
 
-    step(&mut grid);
+    step_3d(&mut grid);
     // println!("{:?}", grid);
     assert_eq!(grid.len(), 11);
+  }
+
+  #[test]
+  fn test_step_4d() {
+    let data = vec![".#.", "..#", "###"];
+    let mut grid: HashSet<Point> = HashSet::new();
+    initialize_space(&data, &mut grid);
+
+    step_4d(&mut grid);
+    // println!("{:?}", grid);
+    assert_eq!(grid.len(), 29);
   }
 }
