@@ -1,6 +1,7 @@
 use common::{Day, Part};
 use lexer::*;
-use std::collections::VecDeque;
+use maplit::hashmap;
+use std::collections::{HashMap, VecDeque};
 use std::fmt;
 use std::iter::FromIterator;
 
@@ -16,7 +17,7 @@ pub fn main() {
     day.run(&data);
 
     assert_eq!(1451467526514, day.part_1.result);
-    assert_eq!(0, day.part_2.result);
+    assert_eq!(224973686321527, day.part_2.result);
 
     println!("{}", day.to_string());
   } else {
@@ -173,19 +174,40 @@ impl Reader<Token, TokenError> for OpReader {
 }
 
 pub fn part_1(data: &[&str]) -> u64 {
+  let precedence_levels = hashmap! {
+    TokenValue::Plus => 2,
+    TokenValue::Times => 2,
+    TokenValue::OpenParen => 1,
+    TokenValue::CloseParen => 1
+  };
+
   data
     .iter()
     .map(|exp| parse(exp))
-    .map(|tokens| evaluate_infix(&tokens))
+    .map(|tokens| evaluate_infix(&tokens, &precedence_levels))
     .sum::<u64>() as u64
 }
 
-pub fn part_2(_data: &[&str]) -> u64 {
-  0
+pub fn part_2(data: &[&str]) -> u64 {
+  let precedence_levels = hashmap! {
+    TokenValue::Plus => 3,
+    TokenValue::Times => 2,
+    TokenValue::OpenParen => 1,
+    TokenValue::CloseParen => 1
+  };
+
+  data
+    .iter()
+    .map(|exp| parse(exp))
+    .map(|tokens| evaluate_infix(&tokens, &precedence_levels))
+    .sum::<u64>() as u64
 }
 
-fn evaluate_infix(infix: &VecDeque<TokenValue>) -> u64 {
-  evaluate_postfix(&infix_to_postfix(infix))
+fn evaluate_infix(
+  infix: &VecDeque<TokenValue>,
+  precedence_levels: &HashMap<TokenValue, u8>,
+) -> u64 {
+  evaluate_postfix(&infix_to_postfix(infix, precedence_levels))
 }
 
 fn evaluate_postfix(postfix: &VecDeque<TokenValue>) -> u64 {
@@ -212,7 +234,10 @@ fn evaluate_postfix(postfix: &VecDeque<TokenValue>) -> u64 {
   stack.pop_front().unwrap()
 }
 
-fn infix_to_postfix(infix: &VecDeque<TokenValue>) -> VecDeque<TokenValue> {
+fn infix_to_postfix(
+  infix: &VecDeque<TokenValue>,
+  precedence_levels: &HashMap<TokenValue, u8>,
+) -> VecDeque<TokenValue> {
   let mut postfix: VecDeque<TokenValue> = VecDeque::with_capacity(infix.capacity());
   let mut stack: VecDeque<TokenValue> = VecDeque::new();
 
@@ -228,13 +253,19 @@ fn infix_to_postfix(infix: &VecDeque<TokenValue>) -> VecDeque<TokenValue> {
         stack.pop_front(); // discard the open paren
       }
       TokenValue::Plus => {
-        while !stack.is_empty() && stack.front() != Some(&TokenValue::OpenParen) {
+        while !stack.is_empty()
+          && precedence_levels.get(&TokenValue::Plus).unwrap()
+            <= precedence_levels.get(stack.front().unwrap()).unwrap()
+        {
           postfix.push_back(stack.pop_front().unwrap());
         }
         stack.push_front(TokenValue::Plus);
       }
       TokenValue::Times => {
-        while !stack.is_empty() && stack.front() != Some(&TokenValue::OpenParen) {
+        while !stack.is_empty()
+          && precedence_levels.get(&TokenValue::Times).unwrap()
+            <= precedence_levels.get(stack.front().unwrap()).unwrap()
+        {
           postfix.push_back(stack.pop_front().unwrap());
         }
         stack.push_front(TokenValue::Times);
@@ -281,53 +312,80 @@ mod tests {
 
   #[test]
   fn test_part_2() {
-    let data = vec![];
-    assert_eq!(part_2(&data), 0);
+    let data = vec![
+      "1 + 2 * 3 + 4 * 5 + 6",
+      "1 + (2 * 3) + (4 * (5 + 6))",
+      "2 * 3 + (4 * 5)",
+      "5 + (8 * 3 + 9 + 3 * 4 * 3)",
+      "5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))",
+      "((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2",
+    ];
+    assert_eq!(part_2(&data), 694173);
   }
 
   #[test]
-  fn test_evaluate() {
+  fn test_evaluate_infix() {
+    let precedence_levels = hashmap! {
+      TokenValue::Plus => 2,
+      TokenValue::Times => 2,
+      TokenValue::OpenParen => 1,
+      TokenValue::CloseParen => 1,
+    };
+
     assert_eq!(
-      evaluate_infix(&VecDeque::from(vec![
-        TokenValue::Number(1),
-        TokenValue::Plus,
-        TokenValue::Number(2),
-        TokenValue::Times,
-        TokenValue::Number(3),
-        TokenValue::Plus,
-        TokenValue::Number(4),
-        TokenValue::Times,
-        TokenValue::Number(5),
-        TokenValue::Plus,
-        TokenValue::Number(6),
-      ])),
+      evaluate_infix(
+        &VecDeque::from(vec![
+          TokenValue::Number(1),
+          TokenValue::Plus,
+          TokenValue::Number(2),
+          TokenValue::Times,
+          TokenValue::Number(3),
+          TokenValue::Plus,
+          TokenValue::Number(4),
+          TokenValue::Times,
+          TokenValue::Number(5),
+          TokenValue::Plus,
+          TokenValue::Number(6),
+        ]),
+        &precedence_levels
+      ),
       71
     );
     assert_eq!(
-      evaluate_infix(&VecDeque::from(vec![
-        TokenValue::Number(1),
-        TokenValue::Plus,
-        TokenValue::OpenParen,
-        TokenValue::Number(2),
-        TokenValue::Times,
-        TokenValue::Number(3),
-        TokenValue::CloseParen,
-        TokenValue::Plus,
-        TokenValue::OpenParen,
-        TokenValue::Number(4),
-        TokenValue::Times,
-        TokenValue::OpenParen,
-        TokenValue::Number(5),
-        TokenValue::Plus,
-        TokenValue::Number(6),
-        TokenValue::CloseParen,
-        TokenValue::CloseParen,
-      ])),
+      evaluate_infix(
+        &VecDeque::from(vec![
+          TokenValue::Number(1),
+          TokenValue::Plus,
+          TokenValue::OpenParen,
+          TokenValue::Number(2),
+          TokenValue::Times,
+          TokenValue::Number(3),
+          TokenValue::CloseParen,
+          TokenValue::Plus,
+          TokenValue::OpenParen,
+          TokenValue::Number(4),
+          TokenValue::Times,
+          TokenValue::OpenParen,
+          TokenValue::Number(5),
+          TokenValue::Plus,
+          TokenValue::Number(6),
+          TokenValue::CloseParen,
+          TokenValue::CloseParen,
+        ]),
+        &precedence_levels
+      ),
       51
     );
   }
   #[test]
   fn test_infix_to_postfix_simple() {
+    let precedence_levels = hashmap! {
+      TokenValue::Plus => 2,
+      TokenValue::Times => 2,
+      TokenValue::OpenParen => 1,
+      TokenValue::CloseParen => 1,
+    };
+
     let data: VecDeque<TokenValue> = VecDeque::from(vec![
       TokenValue::Number(1),
       TokenValue::Plus,
@@ -342,7 +400,7 @@ mod tests {
       TokenValue::Number(6),
     ]);
     assert_eq!(
-      infix_to_postfix(&data),
+      infix_to_postfix(&data, &precedence_levels),
       VecDeque::from(vec![
         TokenValue::Number(1),
         TokenValue::Number(2),
@@ -361,6 +419,13 @@ mod tests {
 
   #[test]
   fn test_infix_to_postfix_parens() {
+    let precedence_levels = hashmap! {
+      TokenValue::Plus => 2,
+      TokenValue::Times => 2,
+      TokenValue::OpenParen => 1,
+      TokenValue::CloseParen => 1,
+    };
+
     let data: VecDeque<TokenValue> = VecDeque::from(vec![
       TokenValue::Number(1),
       TokenValue::Plus,
@@ -381,7 +446,7 @@ mod tests {
       TokenValue::CloseParen,
     ]);
     assert_eq!(
-      infix_to_postfix(&data),
+      infix_to_postfix(&data, &precedence_levels),
       VecDeque::from(vec![
         TokenValue::Number(1),
         TokenValue::Number(2),
@@ -394,6 +459,46 @@ mod tests {
         TokenValue::Plus,
         TokenValue::Times,
         TokenValue::Plus,
+      ])
+    );
+  }
+
+  #[test]
+  fn test_infix_to_postfix_part_2_precendence() {
+    let precedence_levels = hashmap! {
+      TokenValue::Plus => 3,
+      TokenValue::Times => 2,
+      TokenValue::OpenParen => 1,
+      TokenValue::CloseParen => 1,
+    };
+
+    let data: VecDeque<TokenValue> = VecDeque::from(vec![
+      TokenValue::Number(1),
+      TokenValue::Plus,
+      TokenValue::Number(2),
+      TokenValue::Times,
+      TokenValue::Number(3),
+      TokenValue::Plus,
+      TokenValue::Number(4),
+      TokenValue::Times,
+      TokenValue::Number(5),
+      TokenValue::Plus,
+      TokenValue::Number(6),
+    ]);
+    assert_eq!(
+      infix_to_postfix(&data, &precedence_levels),
+      VecDeque::from(vec![
+        TokenValue::Number(1),
+        TokenValue::Number(2),
+        TokenValue::Plus,
+        TokenValue::Number(3),
+        TokenValue::Number(4),
+        TokenValue::Plus,
+        TokenValue::Times,
+        TokenValue::Number(5),
+        TokenValue::Number(6),
+        TokenValue::Plus,
+        TokenValue::Times,
       ])
     );
   }
