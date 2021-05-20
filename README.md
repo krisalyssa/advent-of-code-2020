@@ -4,6 +4,21 @@ My participation in the [Advent of Code](https://adventofcode.com/) for [2020](h
 
 Please feel free to browse through my solutions. Be warned that there may be spoilers if you haven't submitted your own answers already.
 
+## Edit/build/run/repeat
+
+```shell
+# cargo build
+# cargo test --bin NN
+# cargo run --bin NN
+```
+
+To test (or run) everything in one command:
+
+```shell
+# for n in $( seq -w 1 20 ); do echo "$n:"; cargo test --bin $n; done
+# cargo clean && cargo build --release && for n in $( seq -w 1 20 ); do echo "$n:"; cargo run --release --bin $n; done
+```
+
 ## Setting up the sandbox
 
 These instructions are probably over-complicated. `docker create` instead of `docker run -it` followed by `exit` should be possible.
@@ -16,14 +31,6 @@ $ docker run -it --name advent-of-code-2020 --mount type=bind,src=$HOME/Projects
 $ docker start advent-of-code-2020
 $ docker exec -it advent-of-code-2020 zsh
 #
-```
-
-## Edit/build/run/repeat
-
-```shell
-# cargo build
-# cargo test
-# cargo run
 ```
 
 ## Optional: Connecting VS Code to the sandbox
